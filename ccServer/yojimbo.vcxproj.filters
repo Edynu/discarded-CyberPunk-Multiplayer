@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="netcode.io">
+      <UniqueIdentifier>{8D2921C4-79E1-6211-E2E8-3B6DCEBFFD01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="reliable.io">
+      <UniqueIdentifier>{ABDAA209-1790-1BFF-A084-15D60C391203}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tlsf">
+      <UniqueIdentifier>{1E869E7C-0ABD-9F0D-B3A9-85109FBF1B0F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="certs.h" />
+    <ClInclude Include="netcode.io\netcode.h">
+      <Filter>netcode.io</Filter>
+    </ClInclude>
+    <ClInclude Include="reliable.io\reliable.h">
+      <Filter>reliable.io</Filter>
+    </ClInclude>
+    <ClInclude Include="tlsf\tlsf.h">
+      <Filter>tlsf</Filter>
+    </ClInclude>
+    <ClInclude Include="yojimbo.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="certs.c" />
+    <ClCompile Include="netcode.io\netcode.c">
+      <Filter>netcode.io</Filter>
+    </ClCompile>
+    <ClCompile Include="reliable.io\reliable.c">
+      <Filter>reliable.io</Filter>
+    </ClCompile>
+    <ClCompile Include="tlsf\tlsf.c">
+      <Filter>tlsf</Filter>
+    </ClCompile>
+    <ClCompile Include="yojimbo.cpp" />
+  </ItemGroup>
+</Project>
