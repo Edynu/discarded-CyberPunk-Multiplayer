@@ -1,4 +1,4 @@
-[![Build status](https://github.com/networkprotocol/yojimbo/workflows/CI/badge.svg)](https://github.com/networkprotocol/yojimbo/actions?query=workflow%3ACI) [![Coverity Scan Build Status](https://scan.coverity.com/projects/11339/badge.svg)](https://scan.coverity.com/projects/11339)
+[![Build status](https://github.com/networkprotocol/yojimbo/workflows/CI/badge.svg)](https://github.com/networkprotocol/yojimbo/actions?query=workflow%3ACI)
 
 # yojimbo
 
@@ -6,12 +6,15 @@
 
 It's designed around the networking requirements of competitive multiplayer games like first person shooters. 
 
+![image](https://github.com/mas-bandwidth/yojimbo/assets/696656/098935f2-ba2b-4540-8d7f-474acc7f2cd8)
+
 It has the following features:
 
 * Cryptographically secure authentication via [connect tokens](https://github.com/networkprotocol/netcode/blob/master/STANDARD.md)
 * Client/server connection management and timeouts
 * Encrypted and signed packets sent over UDP
 * Packet fragmentation and reassembly
+* Bitpacker and serialization system
 * Reliable-ordered messages and data blocks
 * Estimates of packet loss, latency and bandwidth usage
 
@@ -21,39 +24,17 @@ yojimbo is stable and production ready.
 
 You can get the latest source code by cloning it from github:
 
-      git clone https://github.com/networkprotocol/yojimbo.git
+      git clone https://github.com/mas-bandwidth/yojimbo.git
 
-After cloning, make sure to run this command to populate the netcode.io and reliable.io submodules:
-
-      git submodule update --init --recursive
-   
-Alternatively, you can download one of the latest [releases](https://github.com/networkprotocol/yojimbo/releases)
+Alternatively, you can download the latest [release](https://github.com/mas-bandwidth/yojimbo/releases).
 
 ## Author
 
-The author of this library is [Glenn Fiedler](https://www.linkedin.com/in/glennfiedler).
+The author of this library is Glenn Fiedler.
 
-Other open source libraries by the same author include: [netcode](http://netcode.io) and [reliable](https://github.com/networkprotocol/reliable)
+Other open source libraries by the same author include: [netcode](https://github.com/mas-bandwidth/netcode), [reliable](https://github.com/mas-bandwidth/reliable), and [serialize](https://github.com/mas-bandwidth/serialize)
 
-Glenn is now the founder and CEO of Network Next. Network Next is a radically new way to link networks together, it's a new internet for games, one where networks compete on performance and price to carry your game's traffic. Check it out at https://networknext.com
-
-## Sponsors
-
-**yojimbo** was generously sponsored by:
-
-* **Gold Sponsors**
-    * [Remedy Entertainment](http://www.remedygames.com/)
-    * [Cloud Imperium Games](https://cloudimperiumgames.com)
-    
-* **Silver Sponsors**
-    * [Moon Studios](http://www.oriblindforest.com/#!moon-3/)
-    * [The Network Protocol Company](http://www.thenetworkprotocolcompany.com)
-    
-* **Bronze Sponsors**
-    * [Kite & Lightning](http://kiteandlightning.la/)
-    * [Data Realms](http://datarealms.com)
- 
-And by individual supporters on Patreon. Thank you. You made this possible!
+If you find this software useful, please consider [sponsoring it](https://github.com/sponsors/mas-bandwidth). Thanks!
 
 ## License
 

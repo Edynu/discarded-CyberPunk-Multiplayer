@@ -1,4 +1,15 @@
 #include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Scripting/Natives/Generated/WorldTransform.hpp>
+#include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
+
+#include <chrono> // For std::chrono
+#include <iostream>
+#include <string>
+#include <thread> // For std::thread
+#include <windows.h>
+#include "PipeLine.h"
+
+
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
                                         const RED4ext::Sdk* aSdk)
@@ -7,15 +18,13 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     {
     case RED4ext::EMainReason::Load:
     {
-        /*
-         * Here you can register your custom functions, initalize variable, create hooks and so on.
-         *
-         * Be sure to store the plugin handle and the interface because you cannot get it again later. The plugin handle
-         * is what identify your plugin through the extender.
-         *
-         * Returning "true" in this function loads the plugin, returning "false" will unload it and "Main" will be
-         * called with "Unload" reason.
-         */
+        std::wstring pipeName = L"\\\\.\\pipe\\CyberConnectPipe";
+
+
+        // Start a new thread to handle named pipe communication between launcher and plugin
+        NamedPipeServer pipeServer; // Create an instance of NamedPipeServer
+        std::thread t(&NamedPipeServer::HandleNamedPipeCommunication, &pipeServer);
+        t.detach();
 
         break;
     }
@@ -37,24 +46,8 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo* aInfo)
 {
-    /*
-     * This function supply the necessary information about your plugin, like name, version, support runtime and SDK. DO
-     * NOT do anything here yet!
-     *
-     * You MUST have this function!
-     *
-     * Make sure to fill all of the fields here in order to load your plugin correctly.
-     *
-     * Runtime version is the game's version, it is best to let it set to "RED4EXT_RUNTIME_LATEST" if you want to target
-     * the latest game's version that the SDK defined, if the runtime version specified here and the game's version do
-     * not match, your plugin will not be loaded. If you want to use RED4ext only as a loader and you do not care about
-     * game's version use "RED4EXT_RUNTIME_INDEPENDENT".
-     *
-     * For more information about this function see https://docs.red4ext.com/mod-developers/creating-a-plugin#query.
-     */
-
-    aInfo->name = L"RED4ext.Example.Premake";
-    aInfo->author = L"WopsS";
+    aInfo->name = L"CyberConnect";
+    aInfo->author = L"Edynu";
     aInfo->version = RED4EXT_SEMVER(1, 0, 0);
     aInfo->runtime = RED4EXT_RUNTIME_LATEST;
     aInfo->sdk = RED4EXT_SDK_LATEST;

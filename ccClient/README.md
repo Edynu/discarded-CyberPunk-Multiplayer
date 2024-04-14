@@ -1,6 +1,6 @@
-# RED4ext.Example using Premake
+# RED4ext.Example using Visual Studio
 
-An example of a RED4ext plugin using Premake.
+An example of a RED4ext plugin using Visual Studio.
 
 ## Build instructions
 
@@ -9,10 +9,8 @@ An example of a RED4ext plugin using Premake.
 1. Download and install [Visual Studio 2022 Community Edition](https://www.visualstudio.com/) or a higher version.
 2. Clone this repository.
 3. Clone the dependencies (`git submodule update --init --recursive`).
-4. Extract the content of [Premake 5](https://github.com/premake/premake-core/releases) in the project directory.
-5. Run `generate_project.bat`.
-6. Open the solution (**RED4ext.Example.Premake.sln**) located in **project** directory.
-7. Build the project (the artifacts are located in `build/{debug|release}` directory).
+4. Open the solution (**RED4ext.Example.VisualStudio.sln**).
+5. Build the project (the artifacts are located in `build/{debug|release}` directory).
 
 **Notes**:
 

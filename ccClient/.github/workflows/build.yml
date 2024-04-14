@@ -19,18 +19,5 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Download Premake
-        shell: powershell
-        run: Invoke-WebRequest https://github.com/premake/premake-core/releases/download/v5.0.0-beta1/premake-5.0.0-beta1-windows.zip -OutFile ./premake.zip
-
-      - name: Extract Premake
-        shell: powershell
-        run: Expand-Archive -Path ./premake.zip -DestinationPath .
-
-      - name: Generate project
-        run: ./generate_project.bat
-
       - name: Build
-        run: |
-          cd project
-          MSBuild.exe RED4ext.Example.Premake.sln -v:minimal -m -property:Configuration=${{ matrix.config }}
+        run: MSBuild.exe RED4ext.Example.VisualStudio.sln -v:minimal -m -property:Configuration=${{ matrix.config }}

@@ -1,7 +1,7 @@
 /*
     Yojimbo Loopback Example.
 
-    Copyright © 2016 - 2019, The Network Protocol Company, Inc.
+    Copyright © 2016 - 2024, Mas Bandwidth LLC.
 
     Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
@@ -96,7 +96,7 @@ int ClientServerMain()
     printf( "started server\n" );
 
     uint64_t clientId = 0;
-    random_bytes( (uint8_t*) &clientId, 8 );
+    yojimbo_random_bytes( (uint8_t*) &clientId, 8 );
     printf( "client id is %.16" PRIx64 "\n", clientId );
 
     Client client( GetDefaultAllocator(), Address("0.0.0.0"), config, loopbackAdapter, time );
@@ -136,7 +136,8 @@ int ClientServerMain()
         yojimbo_sleep( deltaTime );
     }
 
-    client.Disconnect();
+    client.DisconnectLoopback();
+
     server.Stop();
 
     return 0;

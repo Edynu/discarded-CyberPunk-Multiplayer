@@ -1,7 +1,7 @@
 /*
     Yojimbo Soak Test.
 
-    Copyright © 2016 - 2019, The Network Protocol Company, Inc.
+    Copyright © 2016 - 2024, Mas Bandwidth LLC.
 
     Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
@@ -27,7 +27,7 @@
 
 const int MaxPacketSize = 16 * 1024;
 const int MaxSnapshotSize = 8 * 1024;
-const int MaxBlockSize = 64 * 1024;
+const int MaxBlockSize = 10 * 1024;
 
 static volatile int quit = 0;
 
@@ -45,9 +45,9 @@ int SoakMain()
 
     ClientServerConfig config;
     config.maxPacketSize = MaxPacketSize;
-    config.clientMemory = 10 * 1024 * 1024;
+    config.clientMemory = 100 * 1024 * 1024;
     config.serverGlobalMemory = 10 * 1024 * 1024;
-    config.serverPerClientMemory = 10 * 1024 * 1024;
+    config.serverPerClientMemory = 100 * 1024 * 1024;
     config.numChannels = 2;
     config.channel[UNRELIABLE_UNORDERED_CHANNEL].type = CHANNEL_TYPE_UNRELIABLE_UNORDERED;
     config.channel[UNRELIABLE_UNORDERED_CHANNEL].maxBlockSize = MaxSnapshotSize;
@@ -64,12 +64,22 @@ int SoakMain()
 
     Server server( GetDefaultAllocator(), privateKey, serverAddress, config, adapter, time );
 
+    server.SetLatency( 1000.0f );
+    server.SetJitter( 100.0f );
+    server.SetPacketLoss( 25.0f );
+    server.SetDuplicates( 25.0f );
+
     server.Start( 1 );
 
     uint64_t clientId = 0;
-    random_bytes( (uint8_t*) &clientId, 8 );
+    yojimbo_random_bytes( (uint8_t*) &clientId, 8 );
 
     Client client( GetDefaultAllocator(), Address("0.0.0.0"), config, adapter, time );
+
+    client.SetLatency( 1000.0f );
+    client.SetJitter( 100.0f );
+    client.SetPacketLoss( 25.0f );
+    client.SetDuplicates( 25.0f );
 
     client.InsecureConnect( privateKey, clientId, serverAddress );
 
@@ -82,6 +92,9 @@ int SoakMain()
 
     bool clientConnected = false;
     bool serverConnected = false;
+
+    double timeForNextClientMessage = 0;
+    double timeForNextServerMessage = 0;
 
     while ( !quit )
     {
@@ -101,17 +114,38 @@ int SoakMain()
 
         if ( client.IsConnected() )
         {
+            if ( ( rand() % 100000 ) == 0 )
+            {
+                printf( "client reconnect\n" );
+                client.Disconnect();
+                client.InsecureConnect( privateKey, clientId, serverAddress );
+                clientConnected = false;
+                numMessagesSentToServer = 0;
+                numMessagesSentToClient = 0;
+                numMessagesReceivedFromClient = 0;
+                numMessagesReceivedFromServer = 0;
+            }
+        }
+
+        if ( client.IsConnected() )
+        {
             clientConnected = true;
 
+            if ( timeForNextClientMessage < time && ( rand() % 1000 ) == 0 )
+            {
+                timeForNextClientMessage = time + yojimbo_random_int( 1, 1000 );
+            }
+
+            if ( timeForNextClientMessage <= time )
 			{
-				const int messagesToSend = random_int( 0, 64 );
+				const int messagesToSend = yojimbo_random_int( 0, 64 );
 
 				for ( int i = 0; i < messagesToSend; ++i )
 				{
 					if ( !client.CanSendMessage( RELIABLE_ORDERED_CHANNEL ) )
 						break;
 
-					if ( rand() % 25 )
+					if ( rand() % 100 )
 					{
 						TestMessage * message = (TestMessage*) client.CreateMessage( TEST_MESSAGE );
 						if ( message )
@@ -123,71 +157,97 @@ int SoakMain()
 					}
 					else
 					{
-						TestBlockMessage * blockMessage = (TestBlockMessage*) client.CreateMessage( TEST_BLOCK_MESSAGE );
-						if ( blockMessage )
-						{
-							blockMessage->sequence = (uint16_t) numMessagesSentToServer;
-							const int blockSize = 1 + ( int( numMessagesSentToServer ) * 33 ) % MaxBlockSize;
-							uint8_t * blockData = client.AllocateBlock( blockSize );
-							if ( blockData )
-							{
-								for ( int j = 0; j < blockSize; ++j )
-									blockData[j] = uint8_t( numMessagesSentToServer + j );
-								client.AttachBlockToMessage( blockMessage, blockData, blockSize );
-								client.SendMessage( RELIABLE_ORDERED_CHANNEL, blockMessage );
-								numMessagesSentToServer++;
-							}
-							else
-							{
-								client.ReleaseMessage( blockMessage );
-							}
-						}
-					}
-				}
+                        int numBlocks = yojimbo_random_int( 1, 3 );
+
+                        for ( int k = 0; k < numBlocks; k++ )
+                        {
+                            if ( !client.CanSendMessage( RELIABLE_ORDERED_CHANNEL ) )
+                                break;
+
+    						TestBlockMessage * blockMessage = (TestBlockMessage*) client.CreateMessage( TEST_BLOCK_MESSAGE );
+    						if ( blockMessage )
+    						{
+    							blockMessage->sequence = (uint16_t) numMessagesSentToServer;
+    							const int blockSize = 1 + ( int( numMessagesSentToServer ) * 33 ) % MaxBlockSize;
+    							uint8_t * blockData = client.AllocateBlock( blockSize );
+    							if ( blockData )
+    							{
+    								for ( int j = 0; j < blockSize; ++j )
+    									blockData[j] = uint8_t( numMessagesSentToServer + j );
+    								client.AttachBlockToMessage( blockMessage, blockData, blockSize );
+    								client.SendMessage( RELIABLE_ORDERED_CHANNEL, blockMessage );
+    								numMessagesSentToServer++;
+    							}
+    							else
+    							{
+    								client.ReleaseMessage( blockMessage );
+    							}
+    						}
+    					}
+    				}
+                }
 			}
 
             const int clientIndex = client.GetClientIndex();
+
+            if ( timeForNextServerMessage < time && ( rand() % 1000 ) == 0 )
+            {
+                int delay = yojimbo_random_int( 1, 1000 );
+                
+                timeForNextServerMessage = time + delay;
+            }
 
             if ( server.IsClientConnected( clientIndex ) )
             {
                 serverConnected = true;
 
-                const int messagesToSend = random_int( 0, 64 );
-
-                for ( int i = 0; i < messagesToSend; ++i )
+                if ( timeForNextServerMessage <= time )
                 {
-                    if ( !server.CanSendMessage( clientIndex, RELIABLE_ORDERED_CHANNEL ) )
-                        break;
+                    const int messagesToSend = yojimbo_random_int( 0, 64 );
 
-                    if ( rand() % 25 )
+                    for ( int i = 0; i < messagesToSend; ++i )
                     {
-                        TestMessage * message = (TestMessage*) server.CreateMessage( clientIndex, TEST_MESSAGE );
-                        if ( message )
+                        if ( !server.CanSendMessage( clientIndex, RELIABLE_ORDERED_CHANNEL ) )
+                            break;
+
+                        if ( rand() % 100 )
                         {
-                            message->sequence = (uint16_t) numMessagesSentToClient;
-                            server.SendMessage( clientIndex, RELIABLE_ORDERED_CHANNEL, message );
-                            numMessagesSentToClient++;
-                        }
-                    }
-                    else
-                    {
-                        TestBlockMessage * blockMessage = (TestBlockMessage*) server.CreateMessage( clientIndex, TEST_BLOCK_MESSAGE );
-                        if ( blockMessage )
-                        {
-                            blockMessage->sequence = (uint16_t) numMessagesSentToClient;
-                            const int blockSize = 1 + ( int( numMessagesSentToClient ) * 33 ) % MaxBlockSize;
-                            uint8_t * blockData = server.AllocateBlock( clientIndex, blockSize );
-                            if ( blockData )
+                            TestMessage * message = (TestMessage*) server.CreateMessage( clientIndex, TEST_MESSAGE );
+                            if ( message )
                             {
-                                for ( int j = 0; j < blockSize; ++j )
-                                    blockData[j] = uint8_t( numMessagesSentToClient + j );
-                                server.AttachBlockToMessage( clientIndex, blockMessage, blockData, blockSize );
-                                server.SendMessage( clientIndex, RELIABLE_ORDERED_CHANNEL, blockMessage );
+                                message->sequence = (uint16_t) numMessagesSentToClient;
+                                server.SendMessage( clientIndex, RELIABLE_ORDERED_CHANNEL, message );
                                 numMessagesSentToClient++;
                             }
-                            else
+                        }
+                        else
+                        {
+                            int numBlocks = yojimbo_random_int( 1, 3 );
+
+                            for ( int k = 0; k < numBlocks; k++ )
                             {
-                                server.ReleaseMessage( clientIndex, blockMessage );
+                                if ( !server.CanSendMessage( clientIndex, RELIABLE_ORDERED_CHANNEL ) )
+                                    break;
+
+                                TestBlockMessage * blockMessage = (TestBlockMessage*) server.CreateMessage( clientIndex, TEST_BLOCK_MESSAGE );
+                                if ( blockMessage )
+                                {
+                                    blockMessage->sequence = (uint16_t) numMessagesSentToClient;
+                                    const int blockSize = 1 + ( int( numMessagesSentToClient ) * 33 ) % MaxBlockSize;
+                                    uint8_t * blockData = server.AllocateBlock( clientIndex, blockSize );
+                                    if ( blockData )
+                                    {
+                                        for ( int j = 0; j < blockSize; ++j )
+                                            blockData[j] = uint8_t( numMessagesSentToClient + j );
+                                        server.AttachBlockToMessage( clientIndex, blockMessage, blockData, blockSize );
+                                        server.SendMessage( clientIndex, RELIABLE_ORDERED_CHANNEL, blockMessage );
+                                        numMessagesSentToClient++;
+                                    }
+                                    else
+                                    {
+                                        server.ReleaseMessage( clientIndex, blockMessage );
+                                    }
+                                }
                             }
                         }
                     }
